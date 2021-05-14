@@ -9,6 +9,8 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
 use Slim\Exception\HttpBadRequestException;
 use Slim\Exception\HttpNotFoundException;
+use App\Config\db;
+use PDO;
 
 abstract class Action
 {
@@ -95,6 +97,44 @@ abstract class Action
         }
 
         return $this->args[$name];
+    }
+
+    /**
+     * @param  string $name
+     * @return mixed
+     * @throws HttpBadRequestException
+     */
+    protected function resolvePar(string $name)
+    {
+        if (!isset($this->request->getParsedBody()[$name])) {
+            throw new HttpBadRequestException($this->request, "Could not resolve param `{$name}`.");
+        }
+
+        return $this->request->getParsedBody()[$name];
+    }
+
+    /**
+     * @param string $query
+     * @return Response
+     */
+    protected function searchDB(string $query): Response
+    {
+        try {
+            $db = new db();
+            $db = $db->connectionDB();
+            $result = $db->query($query);
+
+            if ($result->rowCount() > 0) {
+                $resultFetch = $result->fetchAll(PDO::FETCH_OBJ);
+                return $this->respondWithData($resultFetch);
+            } else {
+                return $this->respondWithData("No existe clientes en la DB");
+            }
+            $db = null;
+            $result = null;
+        }catch(PDOException $e) {
+            return $this->respondWithData($e->getMessage());
+        }
     }
 
     /**

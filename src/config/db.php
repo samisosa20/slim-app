@@ -1,5 +1,10 @@
 <?php
-    class db{
+    declare(strict_types=1);
+
+    namespace App\Config;
+    use PDO;
+
+    class db {
         private $dbHost ='localhost';
         private $dbUser ='root';
         private $dbPass ='Gpax@FSn';
